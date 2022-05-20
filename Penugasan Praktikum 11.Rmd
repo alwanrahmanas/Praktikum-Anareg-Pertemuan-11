@@ -1,0 +1,118 @@
+---
+title: "Penugasan Praktikum 11 Anareg"
+author: "Alwan Rahmana"
+date: "5/19/2022"
+output: word_document
+---
+```{r}
+library(haven)
+library(car)
+library(lmtest)
+library(normtest)
+library(nortest)
+library(tseries)
+```
+
+```{r}
+data1<-Data_TugasModul10
+head(data1)
+
+y<-data1$X0
+x1<-data1$X1
+x2<-data1$X2
+x3<-data1$X3
+x4<-data1$X5
+```
+
+```{r}
+model1<-lm(y~x1+x2+x3+x4)
+summary(model1)
+```
+```{r}
+res<-model1$residuals
+qqPlot(res)
+qqnorm(res,
+main ="Normal Q-Q Plot of Unstandardized Residual")
+qqline(res)
+
+#Histogram
+hist(res,main="Histogram of Unstandardized Residual", xlab= "of Unstandardized Residual", ylab = "Frekuensi", col ="red")
+
+#Boxplot
+
+boxplot(res,main="Boxplot of Unstandardized Residual",col="red")
+```
+```{r}
+shapiro.test(res) #Shapiro Wilk test
+ks.test(res,"pnorm",mean=mean(res),sd=sd(res)) #Kolmogorov-Smirnoff test
+lillie.test(res) #Lilliefors Test
+jb.norm.test(res) #JB test
+jarque.bera.test(res) #JB test
+sf.test(res) #Shapiro-Francia test
+ad.test(res) #Andreson Darling test
+```
+#Asumsi Homoskedastisitas
+
+```{r}
+min(model1$fitted.values)
+plot(x=model1$fitted.values,y=res,
+     xlab= "Fitted Values",
+     ylab= "Residuals",
+     main= "Scatter Plot antara Residual dan Fitted Value",
+     cex.main = 1,
+     col = "steel blue")
+     
+```
+terlihat bahwa residual cenderung meningkat seiring dengan peningkatan nilai fitted value. Hal ini mengindikasikan bahwa varians residual tidak konstan tetapi membesar seiring pertambahan nilai fitted value atau terjadi gejala heteroskedastis.
+
+```{r}
+#buat variabel yang isinya abs. value dari var res
+abs_res<-abs(res)
+
+#regresikan seluruh var bebas terhadap nilai absolut dari residual
+
+model_glesjer<-lm(abs_res~x1+x2+x3+x4)
+summary(model_glesjer)
+```
+```{r}
+bptest(model1)
+```
+
+```{r}
+# x0 x1 x2 x3 x5
+# 2 3 4 5 7
+round(cor(data1[,c(2,3,4,5,7)]),3)
+vif(model1)
+```
+#Terdapat korelasi yang kuat antara X1 dan X0
+
+```{r}
+data2<-Data_TugasModul11
+Y<-data2$Y
+X1<-data2$X1
+X2<-data2$X2
+X3<-data2$X3
+length(X1)
+max(x)
+model2$residuals
+model2<-lm(Y~X1+X2+X3,data=data2)
+model2
+```
+
+
+```{r}
+
+data2$no_obs<-c(1:365)
+plot(x=data2$no_obs,y=model2$residuals,
+     xlab="Nomor observasi",
+     ylab="Residual",
+     xlim=c(0,365),
+     ylim=c(-25,25),
+     main="Scatter Plot antara Residual dan Nomor Observasi",
+     cex.main=1,
+     col="red")
+```
+```{r}
+dwtest(model2)
+```
+

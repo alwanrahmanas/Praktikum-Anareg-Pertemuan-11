@@ -1,0 +1,143 @@
+---
+title: "Praktikum Anareg Pertemuan 11"
+author: "Alwan Rahmana"
+date: "5/19/2022"
+output: word_document
+---
+
+```{r}
+library(haven)
+library(car)
+library(lmtest)
+library(normtest)
+library(nortest)
+library(tseries)
+
+```
+
+```{r}
+datmolas<-Data_Modul11
+datmosat<-Data_Modul01
+
+head(datmolas)
+head(datmosat)
+```
+#Definisikan var independen dan dependen untuk pengecekan asumsi normalitas, homoskedastisitas, dan nonmultikolinearitas
+```{r}
+#Data1 modul satu
+
+y<-datmosat$X10
+x1<-datmosat$X12
+x2<-datmosat$X9
+x3<-datmosat$X11
+x4<-datmosat$X2
+x5<-datmosat$X13
+```
+
+#Bentuk model 1: Model untuk pengecekan asumsi normalitas, homoskedastisitas, dan nonmultikolinearitas
+
+```{r}
+model1<-lm(y~x1+x2+x3+x4+x5)
+summary(model1)
+```
+#Normality test with visualization
+
+
+```{r}
+res<-model1$residuals
+qqPlot(res)
+qqnorm(res,
+main ="Normal Q-Q Plot of Unstandardized Residual")
+qqline(res)
+
+#Histogram
+hist(res,main="Histogram of Unstandardized Residual", xlab= "of Unstandardized Residual", ylab = "Frekuensi", col ="steel blue")
+
+#Boxplot
+
+boxplot(res,main="Boxplot of Unstandardized Residual",col="steel blue")
+
+```
+#Formal normality test
+```{r}
+shapiro.test(res) #Shapiro Wilk test
+ks.test(res,"pnorm",mean=mean(res),sd=sd(res)) #Kolmogorov-Smirnoff test
+lillie.test(res) #Lilliefors Test
+jb.norm.test(res) #JB test
+jarque.bera.test(res) #JB test
+sf.test(res) #Shapiro-Francia test
+ad.test(res) #Andreson Darling test
+```
+#Asumsi Homoskedastisitas
+
+```{r}
+plot(x=model1$fitted.values,y=res,
+     xlab= "Fitted Values",
+     ylab= "Residuals",
+     xlim= c(-10,30),
+     ylim= c(-10,20),
+     main= "Scatter Plot antara Residual dan Fitted Value",
+     cex.main = 1,
+     col = "steel blue")
+     
+```
+
+```{r}
+#Transformasi variabel independen dan residual kuadrat menjadi bentuk LN
+
+ln_ei2<-log(res^2)
+ln_x1<-log(x1)
+ln_x2<-log(x2)
+ln_x3<-log(x3)
+ln_x4<-log(x4)
+ln_x5<-log(x5)
+
+#Regresikan transformed var
+
+model_park<-lm(ln_ei2~ln_x1+ln_x2+ln_x3+ln_x5) #x4 dikeluarkan karena tak sesuai
+summary(model_park)
+```
+Uji Glesjer
+```{r}
+#buat variabel yang isinya abs. value dari var res
+abs_res<-abs(res)
+
+#regresikan seluruh var bebas terhadap nilai absolut dari residual
+
+model_glesjer<-lm(abs_res~x1+x2+x3+x4+x5)
+summary(model_glesjer)
+```
+
+#Pemeriksaan Asumsi Nonmultikolinearitas
+
+```{r}
+round(cor(datmosat[,c(15,12,14,5,16)]),3)
+vif(model1)
+datmosat
+```
+
+Berdasarkan tabel korelasi, terlihat bahwa terdapat korelasi yang kuat antara Jumlah penduduk dan Total Pendapatan Penduduk yang ditunjukkan dengan koefisien korelasi sebesar 0,97. 
+
+
+#Pengecekan Asumsi Nonautokorelasi secara visual
+```{r}
+max(model2$residuals)
+model2<-lm(Y~X,data=datmolas)
+datmolas$no_obs<-c(1:104)
+plot(x=datmolas$no_obs,y=model2$residuals,
+     xlab="Nomor observasi",
+     ylab="Residual",
+     xlim=c(0,120),
+     ylim=c(-400,400),
+     main="Scatter Plot antara Residual dan Nomor Observasi",
+     cex.main=1,
+     col="steel blue")
+```
+```{r}
+#H0: nonautokorelasi
+#Ha: autokorelasi
+
+dwtest(model2)
+length(datmolas$Y)
+```
+Berdasarkan output di atas, didapatkan Dh= 1,3464. Untuk n= 104 dan k=1 dari tabel durbin watson diperoleh
